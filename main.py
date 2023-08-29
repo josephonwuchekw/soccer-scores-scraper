@@ -6,6 +6,10 @@ from PyQt5 import QtGui as qtg
 from DataTableWidget import Ui_Form as DataTableUI
 
 
+class ContinueToNextMatch(Exception):
+    pass
+
+
 class MainWindow(qtw.QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,14 +72,27 @@ class MainWindow(qtw.QWidget):
     def populateRows(self, data):
         allMatches = []
         platforms = []
+        loadedMatches = []
         cellFont = qtg.QFont()
         cellFont.setPointSize(12)
 
         for entry in data:
             matchList = entry["platform"]["matches"]
+            platforms.append({
+                "platform": entry["platform"]["name"],
+                "numOfMatches": len(entry["platform"]["matches"]),
+                "numOfRows": 0
+            })
             allMatches += matchList
 
         for i in range(len(allMatches)):
+            try:
+                for m in loadedMatches:
+                    if m["home"] == allMatches[i]["home"] and m["home"] == allMatches[i]["home"] and m["kickoff"] == allMatches[i]["kickoff"]:
+                        raise ContinueToNextMatch
+            except ContinueToNextMatch:
+                continue
+
             # Index
             idxObjName = f"indexField_{i}"
             indexField = qtw.QLabel()
@@ -102,6 +119,8 @@ class MainWindow(qtw.QWidget):
                                      "    padding:10px;\n"
                                      "}")
             self.ui.gridLayout.addWidget(matchField, i+1, 1, 1, 1)
+            loadedMatches.append(
+                {"home": allMatches[i]["home"], "away": allMatches[i]["away"], "kickoff": allMatches[i]["kickoff"]})
 
             # Time
             timeObjName = f"timeField_{i}"
@@ -117,30 +136,104 @@ class MainWindow(qtw.QWidget):
             self.ui.gridLayout.addWidget(timeField, i+1, 2, 1, 1)
 
             # Platform
-            platformObjName = f"platformField_{i}"
-            platformField = qtw.QLabel()
-            platformField.setText(f'{allMatches[i]["platform"]}')
-            platformField.setFont(cellFont)
-            platformField.setAlignment(qtc.Qt.AlignCenter)
-            platformField.setObjectName(platformObjName)
-            platformField.setStyleSheet("#"+platformObjName+"{\n"
-                                        "    border:1px solid #ccc;\n"
-                                        "    padding:10px;\n"
-                                        "}")
-            self.ui.gridLayout.addWidget(platformField, i+1, 3, 1, 1)
+            platformLayout = qtw.QVBoxLayout()
+
+            for j in range(len(data)):
+                count = 0
+                for match in data[j]["platform"]["matches"]:
+                    if match["home"] == allMatches[i]["home"] and match["away"] == allMatches[i]["away"]:
+                        count += 1
+                        if count == 1:
+                            platformObjName = f"platformField_{i}_{j}_{count}"
+                            platFormName = qtw.QLabel()
+                            platFormName.setText(match["platform"])
+                            platFormName.setObjectName(platformObjName)
+                            platFormName.setStyleSheet("#"+platformObjName+"{\n"
+                                                       "    border:1px solid #ccc;\n"
+                                                       "    padding:10px;\n"
+                                                       "}")
+                            platFormName.setAlignment(qtc.Qt.AlignCenter)
+                            platFormName.setFont(cellFont)
+                            platformLayout.addWidget(platFormName)
+                        elif count == len(data):
+                            platformObjName = f"platformField_{i}_{j}_{count}"
+                            platFormName = qtw.QLabel()
+                            platFormName.setText(" ")
+                            platFormName.setObjectName(platformObjName)
+                            platFormName.setStyleSheet("#"+platformObjName+"{\n"
+                                                       "    border:1px solid #ccc;\n"
+                                                       "    padding:10px;\n"
+                                                       "}")
+                            platFormName.setAlignment(qtc.Qt.AlignCenter)
+                            platFormName.setFont(cellFont)
+                            platformLayout.addWidget(platFormName)
+                        else:
+                            platformObjName = f"platformField_{i}_{j}_{count}"
+                            platFormName = qtw.QLabel()
+                            platFormName.setText("")
+                            platFormName.setObjectName(platformObjName)
+                            platFormName.setStyleSheet("#"+platformObjName+"{\n"
+                                                       "    border:1px solid #ccc;\n"
+                                                       "    padding:10px;\n"
+                                                       "}")
+                            platFormName.setAlignment(qtc.Qt.AlignCenter)
+                            platFormName.setFont(cellFont)
+                            platformLayout.addWidget(platFormName)
+
+            self.ui.gridLayout.addLayout(platformLayout, i+1, 3, 1, 1)
 
             # Tips
-            tipsObjName = f"tipsField_{i}"
-            tipsField = qtw.QLabel()
-            tipsField.setText(f'{allMatches[i]["tip"]}')
-            tipsField.setFont(cellFont)
-            tipsField.setAlignment(qtc.Qt.AlignCenter)
-            tipsField.setObjectName(tipsObjName)
-            tipsField.setStyleSheet("#"+tipsObjName+"{\n"
-                                    "    border:1px solid #ccc;\n"
-                                    "    padding:10px;\n"
-                                    "}")
-            self.ui.gridLayout.addWidget(tipsField, i+1, 4, 1, 1)
+            tipsLayout = qtw.QVBoxLayout()
+
+            for j in range(len(data)):
+                count = 0
+                for match in data[j]["platform"]["matches"]:
+                    if match["home"] == allMatches[i]["home"] and match["away"] == allMatches[i]["away"]:
+                        count += 1
+                        if count == 1:
+                            tipsObjName = f"tipsField_{i}_{j}_{count}"
+                            tipName = qtw.QLabel()
+                            tipName.setText(match["tip"])
+                            tipName.setObjectName(tipsObjName)
+                            tipName.setStyleSheet("#"+tipsObjName+"{\n"
+                                                  "    border-top:1px solid #ccc;\n"
+                                                  "    padding:10px;\n"
+                                                  "}")
+                            tipName.setAlignment(qtc.Qt.AlignCenter)
+                            tipName.setFont(cellFont)
+                            tipsLayout.addWidget(tipName)
+                        elif count == len(data):
+                            tipsObjName = f"tipsField_{i}_{j}_{count}"
+                            tipName = qtw.QLabel()
+                            tipName.setText(" ")
+                            tipName.setObjectName(tipsObjName)
+                            tipName.setStyleSheet("#"+tipsObjName+"{\n"
+                                                  "    border-top:1px solid #ccc;\n"
+                                                  "    padding:10px;\n"
+                                                  "}")
+                            tipName.setAlignment(qtc.Qt.AlignCenter)
+                            tipName.setFont(cellFont)
+                            tipsLayout.addWidget(platFormName)
+                        else:
+                            tipName = qtw.QLabel()
+                            tipName.setText("")
+                            tipName.setAlignment(qtc.Qt.AlignCenter)
+                            tipName.setFont(cellFont)
+                            tipsLayout.addWidget(tipName)
+
+            self.ui.gridLayout.addLayout(tipsLayout, i+1, 4, 1, 1)
+
+            # tipsObjName = f"tipsField_{i}"
+            # tipsField = qtw.QLabel()
+            # tipsField.setText(f'{allMatches[i]["tip"]}')
+            # tipsField.setFont(cellFont)
+            # tipsField.setAlignment(qtc.Qt.AlignCenter)
+            # tipsField.setObjectName(tipsObjName)
+            # tipsField.setStyleSheet("#"+tipsObjName+"{\n"
+            #                         "    border:1px solid #ccc;\n"
+            #                         "    padding:10px;\n"
+            #                         "}")
+            # self.ui.gridLayout.addWidget(tipsField, i+1, 4, 1, 1)
 
 
 if __name__ == '__main__':
