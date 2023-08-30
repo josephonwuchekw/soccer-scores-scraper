@@ -1,9 +1,12 @@
-import sys
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtGui as qtg
+import sys
+import os
+import json
 
 from DataTableWidget import Ui_Form as DataTableUI
+from SpiderThread import SpiderThread
 
 
 class ContinueToNextMatch(Exception):
@@ -16,60 +19,49 @@ class MainWindow(qtw.QWidget):
 
         self.ui = DataTableUI()
         self.ui.setupUi(self)
+        self.ui.refreshBtn.clicked.connect(self.start_crawler)
 
-        dataModel = [
-            {
-                "id": 1,
-                "platform": {
-                    "name": "platform 1",
-                    "url": "www.platform.com",
-                    "matches": [
-                        {
-                            "home": "arsenal",
-                            "away": "manchester united",
-                            "kickoff": "12:00",
-                            "tip": "1 - 2",
-                            "platform": "platform 1"
-                        },
-                        {
-                            "home": "liverpool",
-                            "away": "manchester city",
-                            "kickoff": "12:00",
-                            "tip": "2 - 3",
-                            "platform": "platform 1"
-                        }
-                    ],
-                },
-            },
-            {
-                "id": 2,
-                "platform": {
-                    "name": "platform 2",
-                    "url": "www.platform.com",
-                    "matches": [
-                        {
-                            "home": "arsenal",
-                            "away": "manchester united",
-                            "kickoff": "12:00",
-                            "tip": "1 - 1",
-                            "platform": "platform 2"
-                        },
-                        {
-                            "home": "liverpool",
-                            "away": "manchester city",
-                            "kickoff": "12:00",
-                            "tip": "1 - 3",
-                            "platform": "platform 2"
-                        }
-                    ],
-                },
-            }
-        ]
+        # Crawling thread
+        self.crawling_thread = SpiderThread()
+        self.crawling_thread.signal.connect(self.finished)
+        self.crawling_thread.output_signal.connect(self.checkpoint)
 
-        self.populateRows(dataModel)
         self.show()
 
-    def populateRows(self, data):
+    def start_crawler(self):
+        self.ui.refreshBtn.setText('Fetching...')
+        self.ui.refreshBtn.setEnabled(False)
+        self.crawling_thread.start()
+
+    def finished(self):
+        self.ui.refreshBtn.setText('Fetch matches')
+        self.ui.refreshBtn.setEnabled(True)
+        self.populateRows()
+
+    def checkpoint(self, signal):
+        print(signal)
+
+    # def stop(self):
+    #     print(self.crawling_thread.proc_id)
+    #     os.kill(self.crawling_thread.proc_id)
+    #     self.ui.refreshBtn.setText('Refresh')
+    #     self.ui.refreshBtn.setEnabled(True)
+
+    def populateRows(self):
+        data = []
+        # Load nerdy tips data
+        with open('fixtures.json') as jsonFile:
+            fetchedMatches = json.load(jsonFile)
+
+            data.append({
+                "id": str(len(data)+1),
+                "platform": {
+                    "name": "nerdytips",
+                    "url": "nerdytips.com",
+                    "matches": fetchedMatches
+                }
+            })
+
         allMatches = []
         platforms = []
         loadedMatches = []
@@ -77,13 +69,12 @@ class MainWindow(qtw.QWidget):
         cellFont.setPointSize(12)
 
         for entry in data:
-            matchList = entry["platform"]["matches"]
             platforms.append({
                 "platform": entry["platform"]["name"],
                 "numOfMatches": len(entry["platform"]["matches"]),
                 "numOfRows": 0
             })
-            allMatches += matchList
+            allMatches += entry["platform"]["matches"]
 
         for i in range(len(allMatches)):
             try:
@@ -110,7 +101,7 @@ class MainWindow(qtw.QWidget):
             matchObjName = f"matchField_{i}"
             matchField = qtw.QLabel()
             matchField.setText(
-                f'{allMatches[i]["home"].capitalize()} - {allMatches[i]["away"].capitalize()}')
+                f'{allMatches[i]["home"].capitalize()} {allMatches[i]["score_result"]} {allMatches[i]["away"].capitalize()}')
             matchField.setFont(cellFont)
             matchField.setAlignment(qtc.Qt.AlignCenter)
             matchField.setObjectName(matchObjName)

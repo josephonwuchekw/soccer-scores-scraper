@@ -18,6 +18,16 @@ class Ui_Form(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout.setContentsMargins(5, 5, 5, 5)
         self.verticalLayout.setObjectName("verticalLayout")
+        self.refreshBtn = QtWidgets.QPushButton(Form)
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.refreshBtn.setFont(font)
+        self.refreshBtn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.refreshBtn.setStyleSheet("#refreshBtn{\n"
+"padding:8px;\n"
+"}")
+        self.refreshBtn.setObjectName("refreshBtn")
+        self.verticalLayout.addWidget(self.refreshBtn)
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName("gridLayout")
@@ -96,6 +106,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Sports Scraper"))
+        self.refreshBtn.setText(_translate("Form", "Fetch matches"))
         self.tableColumn_Platform.setText(_translate("Form", "Platform"))
         self.tableColumn_Match.setText(_translate("Form", "Match"))
         self.tableColumn_No.setText(_translate("Form", "No."))
