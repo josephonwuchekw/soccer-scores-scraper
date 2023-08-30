@@ -2,7 +2,6 @@ from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtGui as qtg
 import sys
-import os
 import json
 
 from DataTableWidget import Ui_Form as DataTableUI
@@ -213,18 +212,6 @@ class MainWindow(qtw.QWidget):
                             tipsLayout.addWidget(tipName)
 
             self.ui.gridLayout.addLayout(tipsLayout, i+1, 4, 1, 1)
-
-            # tipsObjName = f"tipsField_{i}"
-            # tipsField = qtw.QLabel()
-            # tipsField.setText(f'{allMatches[i]["tip"]}')
-            # tipsField.setFont(cellFont)
-            # tipsField.setAlignment(qtc.Qt.AlignCenter)
-            # tipsField.setObjectName(tipsObjName)
-            # tipsField.setStyleSheet("#"+tipsObjName+"{\n"
-            #                         "    border:1px solid #ccc;\n"
-            #                         "    padding:10px;\n"
-            #                         "}")
-            # self.ui.gridLayout.addWidget(tipsField, i+1, 4, 1, 1)
 
 
 if __name__ == '__main__':
